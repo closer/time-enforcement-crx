@@ -1,0 +1,18 @@
+name: "TimeEnforcement"
+version: "0.0.0"
+manifest_version: 2
+description: "TimeEnforcement"
+permissions: [
+  "webRequest"
+  "webRequestBlocking"
+  "tabs"
+  "<all_urls>"
+]
+background:
+  scripts: [ "global.js" ]
+browser_action:
+  default_icon:
+    19: "IconUnavailable.png"
+    38: "IconUnavailable@2x.png"
+  default_title: "TimeEnforcement"
+  default_popup: "options.html"
