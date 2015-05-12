@@ -9,6 +9,7 @@
     "cson": "^3.0.1",
     "event-stream": "^3.3.1",
     "gulp-changed": "^1.2.1",
+    "gulp-clean": "^0.3.1",
     "gulp-coffee": "^2.3.1",
     "gulp-cson": "^0.3.0",
     "gulp-json-editor": "^2.2.1",

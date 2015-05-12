@@ -1,4 +1,5 @@
 gulp       = require('gulp')
+clean      = require('gulp-clean')
 changed    = require('gulp-changed')
 coffee     = require('gulp-coffee')
 cson       = require('gulp-cson')
@@ -12,31 +13,33 @@ Q          = require('q')
 
 gulp.task 'default', ['build']
 
+endpoints = ['global', 'options']
+
 gulp.task 'coffee', ->
   gulp.src 'src/**/*.coffee'
     .pipe changed 'src', extension: '.js'
     .pipe coffee emitError: false
-    .pipe gulp.dest 'build/src'
+    .pipe gulp.dest 'js'
 
-gulp.task 'browserify', ['coffee', 'copy'], ->
+gulp.task 'compile', ['coffee', 'dependency'], ->
   es.merge.apply es,
-    [ 'global.js', 'options.js' ].map (path)->
-      browserify "./build/src/#{path}"
+    endpoints.map (path)->
+      browserify "./js/#{path}.js"
         .bundle()
-        .pipe source path
-        .pipe gulp.dest 'build/pkg'
+        .pipe source "#{path}.js"
+        .pipe gulp.dest 'build'
 
-gulp.task 'copy', ->
+gulp.task 'dependency', ->
   gulp.src 'bower_components/zepto/zepto.js'
-    .pipe gulp.dest 'build/src/lib'
+    .pipe gulp.dest 'js/lib'
 
 gulp.task 'assets', ->
-  gulp.src 'src/assets/**/*'
-    .pipe gulp.dest 'build/pkg'
+  gulp.src 'assets/**/*'
+    .pipe gulp.dest 'build'
 
 gulp.task 'html', ->
-  gulp.src 'src/html/**/*'
-    .pipe gulp.dest 'build/pkg'
+  gulp.src 'html/**/*'
+    .pipe gulp.dest 'build'
 
 tag = ->
   q = Q.defer()
@@ -59,27 +62,29 @@ version = ->
 gulp.task 'manifest-compile', ->
   gulp.src 'src/manifest.cson'
     .pipe cson()
-    .pipe gulp.dest 'build/src'
+    .pipe gulp.dest 'build'
 
 gulp.task 'manifest', ['manifest-compile'], ->
   version().then (version)->
-    gulp.src 'build/src/manifest.json'
+    gulp.src 'build/manifest.json'
       .pipe editJson version: version
-      .pipe gulp.dest 'build/pkg'
+      .pipe gulp.dest 'build'
 
-gulp.task 'build', ['manifest', 'script', 'static']
-gulp.task 'script', ['browserify']
+gulp.task 'build', ['clean', 'manifest', 'compile', 'static']
 gulp.task 'static', ['html', 'assets']
 
 gulp.task 'zip', ['build'], (cb)->
   version().then (version)->
-    gulp.src 'build/pkg/**/*'
+    gulp.src 'build/**/*'
       .pipe zip "TimeEnforcement-#{version}.zip"
-      .pipe gulp.dest 'relaese'
+      .pipe gulp.dest 'release'
+
+gulp.task 'clean', ->
+  gulp.src 'build/*'
+    .pipe clean()
 
 gulp.task 'watch', ->
   gulp.watch 'src/manifest.cson', ['manifest']
-  gulp.watch 'src/**/*.coffee', ['browserify']
-
+  gulp.watch 'src/**/*.coffee', ['compile']
   ['html', 'assets'].forEach (file)->
-    gulp.watch "src/#{file}/**/*", [file]
+    gulp.watch "#{file}/**/*", [file]
